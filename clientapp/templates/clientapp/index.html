@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title> Poor Man's Twitter </title>
+</head>
+<body>
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+<div id="app">
+    <h1>[[ banner ]]</h1>
+    <form>
+        <input v-model="name" id="name" type="text" placeholder="Name">
+        <input v-model="body" id="body" type="text" placeholder="Tweet">
+        <input @click="postTweet" id="submit" type="button" value="Tweet">
+    </form>
+
+    <div v-if="payload">
+        <div v-for="item in payload" :style="{ 'border':'1px dotted' }">
+            <h5>[[item.name]]</h5>
+            <p>[[ item.tweet_body ]]</p>
+        </div>
+    </div>
+    <ul v-else>[[message]]</ul>
+</div>
+
+
+<script>
+    const baseURL = "http://localhost:8000"
+    var app = new Vue({
+            delimiters: ['[[', ']]'],
+            el: '#app',
+            data() {
+                return {
+                    banner: 'A Poor Man\'s Twitter',
+                    payload: this.getAllData(),
+                    name: null,
+                    body: null,
+                }
+            },
+            methods: {
+                async getAllData() {
+                    try {
+                        const res = await fetch(`${baseURL}/tweets`, {
+                            headers: {
+                                'Accept': 'application/json',
+                            },
+                        });
+                        this.payload = await res.json()
+                    } catch (err) {
+                        console.log(err.message);
+                    }
+                },
+                async postTweet() {
+                    try {
+                        const formData = JSON.stringify({
+                            name: this.name,
+                            tweet_body: this.body
+                        })
+
+                        const res = await fetch(`${baseURL}/tweets/`, {
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            },
+                            body: formData,
+                            method: "post"
+                        });
+                        const status = await res.json()
+                        console.log(status)
+                    } catch (err) {
+                        console.log(err.message);
+                    }
+                    this.name = null
+                    this.body = null
+                    await this.getAllData()
+                }
+
+            }
+        })
+    ;
+</script>
+</body>
+
+</html>
